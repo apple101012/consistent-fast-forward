@@ -3,7 +3,11 @@
   "name": "Consistent Fast Forward",
   "version": "0.1.0",
   "description": "Consistent left/right arrow seek behavior across web video players.",
-  "permissions": ["storage"],
+  "permissions": ["storage", "activeTab"],
+  "action": {
+    "default_title": "Consistent Fast Forward",
+    "default_popup": "src/popup/popup.html"
+  },
   "content_scripts": [
     {
       "matches": ["<all_urls>"],

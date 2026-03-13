@@ -17,6 +17,7 @@ describe('seek-core.mergeSettings', () => {
       enabled: true,
       backwardSeconds: 5,
       forwardSeconds: 5,
+      defaultMode: 'block',
       debugMode: false,
       siteRules: []
     });
@@ -34,12 +35,23 @@ describe('seek-core.mergeSettings', () => {
     expect(merged.enabled).toBe(false);
     expect(merged.backwardSeconds).toBe(1);
     expect(merged.forwardSeconds).toBe(60);
+    expect(merged.defaultMode).toBe('block');
     expect(merged.debugMode).toBe(true);
     expect(merged.siteRules).toEqual([{ host: 'example.com', mode: 'allow', customIntervalSeconds: 80 }]);
   });
 });
 
 describe('seek-core.resolveSiteRule', () => {
+  it('blocks when no allow rule exists and default mode is block', () => {
+    const result = seekCore.resolveSiteRule('video.example.com', [], { defaultMode: 'block' });
+    expect(result.blocked).toBe(true);
+  });
+
+  it('allows when no rule exists and default mode is allow', () => {
+    const result = seekCore.resolveSiteRule('video.example.com', [], { defaultMode: 'allow' });
+    expect(result.blocked).toBe(false);
+  });
+
   it('uses block rule when block and allow have equal specificity', () => {
     const result = seekCore.resolveSiteRule('video.example.com', [
       { host: 'example.com', mode: 'allow', customIntervalSeconds: 7 },
@@ -57,6 +69,25 @@ describe('seek-core.resolveSiteRule', () => {
     expect(result.blocked).toBe(false);
     expect(result.backwardSeconds).toBe(9);
     expect(result.forwardSeconds).toBe(9);
+  });
+});
+
+describe('seek-core site-rule mutations', () => {
+  it('upserts allow rule for host', () => {
+    const rules = seekCore.upsertSiteRule([], 'www.Example.com', 'allow');
+    expect(rules).toEqual([{ host: 'www.example.com', mode: 'allow' }]);
+  });
+
+  it('removes host rule', () => {
+    const rules = seekCore.removeSiteRule(
+      [
+        { host: 'one.example.com', mode: 'allow' },
+        { host: 'two.example.com', mode: 'allow' }
+      ],
+      'one.example.com'
+    );
+
+    expect(rules).toEqual([{ host: 'two.example.com', mode: 'allow' }]);
   });
 });
 

@@ -1,6 +1,7 @@
 # Consistent Fast Forward
 
 Firefox-first extension for consistent left/right arrow seek behavior across video websites.
+Default behavior is blocked/off for all sites until you explicitly enable a site from the toolbar popup.
 
 ## Product Document
 - [PRD](./PRD.md)
@@ -26,6 +27,11 @@ npm run lint:ext
 ```bash
 npm run run:firefox
 ```
+
+## Per-Site Enable
+1. Open the website you want.
+2. Click the extension icon.
+3. Toggle `Enable on this site`.
 
 ## Optional Packaging
 ```bash

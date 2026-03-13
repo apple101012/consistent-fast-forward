@@ -6,6 +6,7 @@
     enabled: true,
     backwardSeconds: 5,
     forwardSeconds: 5,
+    defaultMode: 'block',
     debugMode: false,
     siteRules: []
   });
@@ -55,6 +56,10 @@
     return normalized;
   }
 
+  function normalizeDefaultMode(value) {
+    return value === 'allow' ? 'allow' : 'block';
+  }
+
   function mergeSettings(raw) {
     var source = raw && typeof raw === 'object' ? raw : {};
     var mergedRules = [];
@@ -72,6 +77,7 @@
       enabled: source.enabled !== undefined ? Boolean(source.enabled) : DEFAULT_SETTINGS.enabled,
       backwardSeconds: normalizeSeconds(source.backwardSeconds, DEFAULT_SETTINGS.backwardSeconds, 1, 60),
       forwardSeconds: normalizeSeconds(source.forwardSeconds, DEFAULT_SETTINGS.forwardSeconds, 1, 60),
+      defaultMode: normalizeDefaultMode(source.defaultMode),
       debugMode: source.debugMode !== undefined ? Boolean(source.debugMode) : DEFAULT_SETTINGS.debugMode,
       siteRules: mergedRules
     };
@@ -113,9 +119,10 @@
     }
 
     var result = {
-      blocked: false,
+      blocked: merged.defaultMode === 'block',
       backwardSeconds: merged.backwardSeconds,
-      forwardSeconds: merged.forwardSeconds
+      forwardSeconds: merged.forwardSeconds,
+      matchedRule: null
     };
 
     if (!winner) {
@@ -124,8 +131,12 @@
 
     if (winner.rule.mode === 'block') {
       result.blocked = true;
+      result.matchedRule = winner.rule;
       return result;
     }
+
+    result.blocked = false;
+    result.matchedRule = winner.rule;
 
     if (winner.rule.customIntervalSeconds !== undefined) {
       result.backwardSeconds = winner.rule.customIntervalSeconds;
@@ -133,6 +144,70 @@
     }
 
     return result;
+  }
+
+  function upsertSiteRule(siteRules, host, mode, customIntervalSeconds) {
+    var normalizedHost = normalizeHost(host);
+    var normalizedMode = mode === 'allow' ? 'allow' : mode === 'block' ? 'block' : null;
+    if (!normalizedHost || !normalizedMode) {
+      return Array.isArray(siteRules) ? siteRules.slice() : [];
+    }
+
+    var nextRules = [];
+    var hadExisting = false;
+    var normalizedCustom = customIntervalSeconds !== undefined && customIntervalSeconds !== null
+      ? normalizeSeconds(customIntervalSeconds, 5, 1, 600)
+      : null;
+
+    var input = Array.isArray(siteRules) ? siteRules : [];
+    for (var i = 0; i < input.length; i += 1) {
+      var normalized = normalizeRule(input[i]);
+      if (!normalized) {
+        continue;
+      }
+
+      if (normalized.host === normalizedHost) {
+        if (!hadExisting) {
+          var replacement = { host: normalizedHost, mode: normalizedMode };
+          if (normalizedCustom !== null) {
+            replacement.customIntervalSeconds = normalizedCustom;
+          }
+          nextRules.push(replacement);
+          hadExisting = true;
+        }
+        continue;
+      }
+
+      nextRules.push(normalized);
+    }
+
+    if (!hadExisting) {
+      var inserted = { host: normalizedHost, mode: normalizedMode };
+      if (normalizedCustom !== null) {
+        inserted.customIntervalSeconds = normalizedCustom;
+      }
+      nextRules.push(inserted);
+    }
+
+    return nextRules;
+  }
+
+  function removeSiteRule(siteRules, host) {
+    var normalizedHost = normalizeHost(host);
+    if (!normalizedHost) {
+      return Array.isArray(siteRules) ? siteRules.slice() : [];
+    }
+
+    var input = Array.isArray(siteRules) ? siteRules : [];
+    var nextRules = [];
+    for (var i = 0; i < input.length; i += 1) {
+      var normalized = normalizeRule(input[i]);
+      if (!normalized || normalized.host === normalizedHost) {
+        continue;
+      }
+      nextRules.push(normalized);
+    }
+    return nextRules;
   }
 
   function isLikelyCodeEditor(element) {
@@ -333,6 +408,8 @@
     normalizeHost: normalizeHost,
     hostMatchesRule: hostMatchesRule,
     resolveSiteRule: resolveSiteRule,
+    upsertSiteRule: upsertSiteRule,
+    removeSiteRule: removeSiteRule,
     isEditableElement: isEditableElement,
     isEventFromEditableTarget: isEventFromEditableTarget,
     selectTargetVideo: selectTargetVideo,

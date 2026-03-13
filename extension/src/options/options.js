@@ -15,6 +15,7 @@
   var debugInput = document.getElementById('debug-mode');
   var saveButton = document.getElementById('save');
   var resetButton = document.getElementById('reset');
+  var currentSettings = core.mergeSettings();
 
   function setStatus(message, isError) {
     statusElement.textContent = message;
@@ -79,7 +80,9 @@
       enabled: enabledInput.checked,
       backwardSeconds: backward,
       forwardSeconds: forward,
-      debugMode: debugInput.checked
+      defaultMode: currentSettings.defaultMode || 'block',
+      debugMode: debugInput.checked,
+      siteRules: currentSettings.siteRules
     });
   }
 
@@ -94,10 +97,13 @@
     try {
       var stored = await promisifyStorageGet(core.STORAGE_KEY);
       var settings = core.mergeSettings(stored[core.STORAGE_KEY]);
+      settings.defaultMode = 'block';
+      currentSettings = settings;
       settingsToForm(settings);
       setStatus('Loaded settings.', false);
     } catch (_error) {
       settingsToForm(core.DEFAULT_SETTINGS);
+      currentSettings = core.DEFAULT_SETTINGS;
       setStatus('Loaded defaults (storage unavailable).', true);
     }
   }
@@ -105,6 +111,7 @@
   async function saveSettings() {
     try {
       var settings = formToSettings();
+      currentSettings = settings;
       await promisifyStorageSet((function () {
         var payload = {};
         payload[core.STORAGE_KEY] = settings;

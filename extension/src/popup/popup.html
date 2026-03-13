@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Consistent Fast Forward</title>
+    <link rel="stylesheet" href="./popup.css" />
+  </head>
+  <body>
+    <main class="popup">
+      <h1>Consistent Fast Forward</h1>
+      <p id="site-label" class="site-label">No active website</p>
+
+      <label class="toggle-row" for="allow-site">
+        <input id="allow-site" type="checkbox" />
+        <span>Enable on this site</span>
+      </label>
+
+      <div class="actions">
+        <button id="open-options" type="button">Open settings</button>
+      </div>
+
+      <p id="status" role="status" aria-live="polite"></p>
+    </main>
+
+    <script src="../shared/seek-core.js"></script>
+    <script src="./popup.js"></script>
+  </body>
+</html>
