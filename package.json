@@ -1,0 +1,19 @@
+{
+  "name": "consistent-fast-forward",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Firefox-first browser extension for consistent arrow-key seeking on videos.",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint:ext": "web-ext lint --source-dir extension",
+    "build:ext": "web-ext build --source-dir extension --artifacts-dir artifacts --overwrite-dest",
+    "run:firefox": "web-ext run --source-dir extension",
+    "verify": "npm run test && npm run lint:ext"
+  },
+  "devDependencies": {
+    "jsdom": "^28.1.0",
+    "vitest": "^4.1.0",
+    "web-ext": "^9.4.0"
+  }
+}

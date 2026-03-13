@@ -1,0 +1,32 @@
+{
+  "manifest_version": 3,
+  "name": "Consistent Fast Forward",
+  "version": "0.1.0",
+  "description": "Consistent left/right arrow seek behavior across web video players.",
+  "permissions": ["storage"],
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": [
+        "src/shared/seek-core.js",
+        "src/content/content-script.js"
+      ],
+      "run_at": "document_idle",
+      "all_frames": true
+    }
+  ],
+  "options_ui": {
+    "page": "src/options/options.html",
+    "open_in_tab": true
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "consistent-fast-forward@apple101012.github.io",
+      "strict_min_version": "142.0",
+      "data_collection_permissions": {
+        "required": ["none"],
+        "optional": []
+      }
+    }
+  }
+}

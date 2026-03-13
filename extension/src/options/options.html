@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Consistent Fast Forward Settings</title>
+    <link rel="stylesheet" href="./options.css" />
+  </head>
+  <body>
+    <main class="panel">
+      <h1>Consistent Fast Forward</h1>
+      <p class="subtitle">Firefox-first extension settings</p>
+
+      <label class="row checkbox-row" for="enabled">
+        <input id="enabled" type="checkbox" />
+        <span>Enable extension</span>
+      </label>
+
+      <label class="row" for="backward-seconds">
+        <span>Backward seek (seconds)</span>
+        <input id="backward-seconds" type="number" min="1" max="60" step="1" />
+      </label>
+
+      <label class="row" for="forward-seconds">
+        <span>Forward seek (seconds)</span>
+        <input id="forward-seconds" type="number" min="1" max="60" step="1" />
+      </label>
+
+      <label class="row checkbox-row" for="debug-mode">
+        <input id="debug-mode" type="checkbox" />
+        <span>Debug logging</span>
+      </label>
+
+      <div class="actions">
+        <button id="save" type="button">Save</button>
+        <button id="reset" type="button" class="secondary">Reset defaults</button>
+      </div>
+
+      <p id="status" role="status" aria-live="polite"></p>
+    </main>
+
+    <script src="../shared/seek-core.js"></script>
+    <script src="./options.js"></script>
+  </body>
+</html>
