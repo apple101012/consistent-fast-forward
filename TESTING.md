@@ -15,8 +15,9 @@ npm run verify
 1. Run `npm run run:firefox`.
 2. Open a site with HTML5 video.
 3. Verify `ArrowLeft` seeks backward and `ArrowRight` seeks forward.
-4. Focus an input field and verify arrow keys are not hijacked.
-5. Open extension settings and change intervals; verify behavior updates.
+4. On a site that already has arrow-key skip (for example +10s), verify only the extension interval is applied (no stacked skip).
+5. Focus an input field and verify arrow keys are not hijacked.
+6. Open extension settings and change intervals; verify behavior updates.
 
 ## Optional Chromium Smoke Test
 Load `extension/` as unpacked extension in a Chromium-based browser and repeat the same keyboard/input checks.

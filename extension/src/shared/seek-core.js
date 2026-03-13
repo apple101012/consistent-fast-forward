@@ -220,6 +220,20 @@
     return Boolean(video && typeof video.currentTime === 'number' && !Number.isNaN(video.currentTime));
   }
 
+  function getSeekBounds(video) {
+    var minTime = 0;
+    var maxTime = Number.MAX_SAFE_INTEGER;
+
+    if (video && Number.isFinite(video.duration) && video.duration > 0) {
+      maxTime = video.duration;
+    }
+
+    return {
+      minTime: minTime,
+      maxTime: maxTime
+    };
+  }
+
   function selectTargetVideo(videos, lastInteractedVideo) {
     if (!Array.isArray(videos) || videos.length === 0) {
       return null;
@@ -254,18 +268,36 @@
   }
 
   function seekBy(video, deltaSeconds) {
-    if (!isUsableVideo(video)) {
+    var target = calculateSeekTarget(video, deltaSeconds);
+    if (target === null) {
       return false;
+    }
+
+    return seekTo(video, target);
+  }
+
+  function calculateSeekTarget(video, deltaSeconds) {
+    if (!isUsableVideo(video)) {
+      return null;
     }
 
     var delta = toNumber(deltaSeconds, 0);
     if (!delta) {
+      return null;
+    }
+
+    var bounds = getSeekBounds(video);
+    return clamp(video.currentTime + delta, bounds.minTime, bounds.maxTime);
+  }
+
+  function seekTo(video, targetSeconds) {
+    if (!isUsableVideo(video)) {
       return false;
     }
 
-    var minTime = 0;
-    var maxTime = Number.isFinite(video.duration) && video.duration > 0 ? video.duration : Number.MAX_SAFE_INTEGER;
-    var target = clamp(video.currentTime + delta, minTime, maxTime);
+    var target = toNumber(targetSeconds, video.currentTime);
+    var bounds = getSeekBounds(video);
+    target = clamp(target, bounds.minTime, bounds.maxTime);
 
     if (Math.abs(target - video.currentTime) < 0.01) {
       return false;
@@ -304,6 +336,8 @@
     isEditableElement: isEditableElement,
     isEventFromEditableTarget: isEventFromEditableTarget,
     selectTargetVideo: selectTargetVideo,
+    calculateSeekTarget: calculateSeekTarget,
+    seekTo: seekTo,
     seekBy: seekBy,
     getDeltaForKey: getDeltaForKey
   };

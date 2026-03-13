@@ -11,6 +11,8 @@
   var settings = core.mergeSettings();
   var ready = false;
   var lastInteractedVideo = null;
+  var reassertionDelaysMs = [0, 28, 120];
+  var seekRevisionByVideo = new WeakMap();
 
   function logDebug() {
     if (!settings.debugMode) {
@@ -83,7 +85,11 @@
   }
 
   function applySeekForEvent(event) {
-    if (!ready || !settings.enabled || event.defaultPrevented || event.isComposing) {
+    if (!ready || !settings.enabled || event.isComposing) {
+      return;
+    }
+
+    if (event.altKey || event.ctrlKey || event.metaKey) {
       return;
     }
 
@@ -106,14 +112,49 @@
       return;
     }
 
-    var changed = core.seekBy(targetVideo, delta);
-    if (!changed) {
+    var targetTime = core.calculateSeekTarget(targetVideo, delta);
+    if (targetTime === null) {
       return;
     }
 
+    blockEvent(event);
+    core.seekTo(targetVideo, targetTime);
+    scheduleReassertions(targetVideo, targetTime);
     lastInteractedVideo = targetVideo;
+  }
+
+  function blockEvent(event) {
     event.preventDefault();
     event.stopPropagation();
+
+    if (typeof event.stopImmediatePropagation === 'function') {
+      event.stopImmediatePropagation();
+    }
+  }
+
+  function scheduleReassertions(video, targetTime) {
+    if (!video) {
+      return;
+    }
+
+    var revision = (seekRevisionByVideo.get(video) || 0) + 1;
+    seekRevisionByVideo.set(video, revision);
+
+    for (var i = 0; i < reassertionDelaysMs.length; i += 1) {
+      (function (delay) {
+        global.setTimeout(function () {
+          if (seekRevisionByVideo.get(video) !== revision) {
+            return;
+          }
+
+          if (Math.abs(video.currentTime - targetTime) <= 0.12) {
+            return;
+          }
+
+          core.seekTo(video, targetTime);
+        }, delay);
+      })(reassertionDelaysMs[i]);
+    }
   }
 
   function onStorageChanged(changes, areaName) {
@@ -134,7 +175,7 @@
 
   document.addEventListener('play', trackVideoInteraction, true);
   document.addEventListener('pointerdown', trackVideoInteraction, true);
-  document.addEventListener('keydown', function (event) {
+  window.addEventListener('keydown', function (event) {
     try {
       applySeekForEvent(event);
     } catch (error) {

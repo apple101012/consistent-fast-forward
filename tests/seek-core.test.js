@@ -108,6 +108,21 @@ describe('seek-core video targeting and seek', () => {
     expect(video.currentTime).toBe(20);
   });
 
+  it('computes and enforces a fixed target time', () => {
+    const video = createVideo({ currentTime: 50, duration: 120 });
+    const target = seekCore.calculateSeekTarget(video, 5);
+    expect(target).toBe(55);
+
+    const moved = seekCore.seekTo(video, target);
+    expect(moved).toBe(true);
+    expect(video.currentTime).toBe(55);
+
+    video.currentTime = 65; // simulate a site also applying its own +10s handler
+    const corrected = seekCore.seekTo(video, target);
+    expect(corrected).toBe(true);
+    expect(video.currentTime).toBe(55);
+  });
+
   it('maps key to delta', () => {
     expect(seekCore.getDeltaForKey('ArrowLeft', { backwardSeconds: 7 })).toBe(-7);
     expect(seekCore.getDeltaForKey('ArrowRight', { forwardSeconds: 6 })).toBe(6);
